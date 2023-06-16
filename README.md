@@ -1,2 +1,2 @@
 # Hobbies
-My Hobby Projects With a Lot ofThings
+My Hobby Projects With a Lot of Things
