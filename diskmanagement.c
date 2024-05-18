@@ -88,7 +88,7 @@ void Scan(int temp[], int head, int rotation) {
     index = find_index(arr, head);
 
     printf("Scan Disk Scheduling Algorithm\n");
-    printf("Sequence of disk access: %d", head);
+    printf("Sequence of disk access: %d\n", head);
 
     if (rotation == 1) { // moving left
         // Move left to the start of the disk
@@ -96,15 +96,22 @@ void Scan(int temp[], int head, int rotation) {
             cur_track = arr[i];
             distance = abs(cur_track - head);
             seek_count += distance;
-            printf("head=%d --> %d seek_count=%d\n", head, cur_track, distance);
+            printf("head=%d --> %d seek_count=%d\n", head, cur_track, seek_count);
             head = cur_track;
+        }
+        // Move from the current position to the start of the disk
+        if (head != 0) {
+            distance = abs(head - 0); // Jump to the start of the disk
+            seek_count += distance;
+            printf("head=%d --> %d seek_count=%d\n", head, 0, seek_count);
+            head = 0;
         }
         // Move right to the greatest element in the disk
         for (int i = index + 1; i < size; i++) {
             cur_track = arr[i];
             distance = abs(cur_track - head);
             seek_count += distance;
-            printf("head=%d --> %d seek_count=%d\n", head, cur_track, distance);
+            printf("head=%d --> %d seek_count=%d\n", head, cur_track, seek_count);
             head = cur_track;
         }
     } else { // moving right
@@ -113,20 +120,28 @@ void Scan(int temp[], int head, int rotation) {
             cur_track = arr[i];
             distance = abs(cur_track - head);
             seek_count += distance;
-            printf("head=%d --> %d seek_count=%d\n", head, cur_track, distance);
+            printf("head=%d --> %d seek_count=%d\n", head, cur_track, seek_count);
             head = cur_track;
+        }
+        // Move from the current position to the end of the disk
+        if (head != size - 1) {
+            distance = abs(head - (size - 1)); // Jump to the end of the disk
+            seek_count += distance;
+            printf("head=%d --> %d seek_count=%d\n", head, size - 1, seek_count);
+            head = size - 1;
         }
         // Move left to the start of the disk
         for (int i = index; i >= 0; i--) {
             cur_track = arr[i];
             distance = abs(cur_track - head);
             seek_count += distance;
-            printf("head=%d --> %d seek_count=%d\n", head, cur_track, distance);
+            printf("head=%d --> %d seek_count=%d\n", head, cur_track, seek_count);
             head = cur_track;
         }
     }
     printf("Total number of seek operations = %d\n", seek_count);
 }
+
 
 
 
@@ -146,8 +161,10 @@ void Cscan(int temp[], int head, int rotation) {
     index = find_index(arr, head);
 
     printf("C-Scan Disk Scheduling Algorithm\n");
+    printf("Sequence of disk access: %d\n", head);
 
     if (rotation == 1) { // moving left
+        // Move left to the start of the disk
         for (int i = index; i >= 0; i--) {
             cur_track = arr[i];
             distance = abs(cur_track - head);
@@ -155,13 +172,19 @@ void Cscan(int temp[], int head, int rotation) {
             printf("head=%d --> %d seek_count=%d\n", head, cur_track, distance);
             head = cur_track;
         }
-        head = 199;
-        distance = abs(head - arr[0]);
+        // Jump from the start (0) to the end (199) of the disk
+        if (head != 0) {
+            distance = abs(head - 0);
+            seek_count += distance;
+            printf("head=%d --> %d seek_count=%d\n", head, 0, distance);
+            head = 0;
+        }
+        distance = 199;
         seek_count += distance;
-        printf("head=%d --> %d seek_count=%d\n", arr[0], head, distance);
-        head = 0;
-        seek_count += 199;
-        printf("head=%d --> %d seek_count=%d\n", 199, head, 199);
+        printf("head=%d --> %d seek_count=%d\n", head, 199, distance);
+        head = 199;
+        
+        // Move right to the next requests after index
         for (int i = size - 1; i > index; i--) {
             cur_track = arr[i];
             distance = abs(cur_track - head);
@@ -170,6 +193,7 @@ void Cscan(int temp[], int head, int rotation) {
             head = cur_track;
         }
     } else { // moving right
+        // Move right to the end of the disk
         for (int i = index + 1; i < size; i++) {
             cur_track = arr[i];
             distance = abs(cur_track - head);
@@ -177,11 +201,20 @@ void Cscan(int temp[], int head, int rotation) {
             printf("head=%d --> %d seek_count=%d\n", head, cur_track, distance);
             head = cur_track;
         }
-        head = 0;
-        distance = abs(head - arr[size - 1]);
+        // Jump from the end (199) to the start (0) of the disk
+        if (head != 199) {
+            distance = abs(head - 199);
+            seek_count += distance;
+            printf("head=%d --> %d seek_count=%d\n", head, 199, distance);
+            head = 199;
+        }
+        distance = 199;
         seek_count += distance;
-        printf("head=%d --> %d seek_count=%d\n", arr[size - 1], head, distance);
-        for (int i = 0; i < index; i++) {
+        printf("head=%d --> %d seek_count=%d\n", head, 0, distance);
+        head = 0;
+        
+        // Move left to the next requests before index
+        for (int i = 1; i < index+1; i++) {
             cur_track = arr[i];
             distance = abs(cur_track - head);
             seek_count += distance;
@@ -256,40 +289,42 @@ void Clook(int temp[], int head, int rotation) {
     index = find_index(arr, head);
 
     printf("C-Look Disk Scheduling Algorithm\n");
-    printf("Sequence of disk access: %d", head);
+    printf("Sequence of disk access:\n");
 
-    if (rotation == 1) {
+    if (rotation == 1) { // moving left
         for (int i = index; i >= 0; i--) {
             cur_track = arr[i];
             distance = abs(cur_track - head);
             seek_count += distance;
+            printf("head=%d --> %d seek_count=%d\n", head, cur_track, distance);
             head = cur_track;
-            printf(" -> %d", cur_track);
         }
+        // After reaching the leftmost, jump to the rightmost unvisited track
         for (int i = size - 1; i > index; i--) {
             cur_track = arr[i];
             distance = abs(cur_track - head);
             seek_count += distance;
+            printf("head=%d --> %d seek_count=%d\n", head, cur_track, distance);
             head = cur_track;
-            printf(" -> %d", cur_track);
         }
-    } else {
+    } else { // moving right
         for (int i = index + 1; i < size; i++) {
             cur_track = arr[i];
             distance = abs(cur_track - head);
             seek_count += distance;
+            printf("head=%d --> %d seek_count=%d\n", head, cur_track, distance);
             head = cur_track;
-            printf(" -> %d", cur_track);
         }
-        for (int i = 0; i < index; i++) {
+        // After reaching the rightmost, jump to the leftmost unvisited track
+        for (int i = 0; i <= index; i++) {
             cur_track = arr[i];
             distance = abs(cur_track - head);
             seek_count += distance;
+            printf("head=%d --> %d seek_count=%d\n", head, cur_track, distance);
             head = cur_track;
-            printf(" -> %d", cur_track);
         }
     }
-    printf("\nTotal number of seek operations = %d\n", seek_count);
+    printf("Total number of seek operations = %d\n", seek_count);
 }
 
 int main() {
