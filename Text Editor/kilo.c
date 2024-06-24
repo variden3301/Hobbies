@@ -6,6 +6,7 @@
 #include <sys/ioctl.h>  // for ioctl
 #include <ctype.h>
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 
 /* Defines */
@@ -26,6 +27,8 @@ struct editorConfig E;
 /* Terminal */
 
 void die(const char *s) {
+  write(STDOUT_FILENO, "\x1b[2J", 4);
+  write(STDOUT_FILENO, "\x1b[H", 3);
   perror(s);
   exit(1);
 }
@@ -60,11 +63,28 @@ char editorReadKey(){
   return c;
 }
 
+int getCursorPosition(int *rows, int *cols){
+  char buf[32];
+  unsigned int i = 0;
+  if(write(STDOUT_FILENO, "\x1b[6n", 4) != 4) return -1;
+  
+  while (i < sizeof(buf) - 1) {
+    if (read(STDIN_FILENO, &buf[i], 1) != 1) break;
+    if (buf[i] == 'R') break;
+    i++;
+  }
+  buf[i] = '\0';
+  if(buf[0] != '\x1b' || buf[1] != '[') return -1;
+  if(sscanf(&buf[2], "%d;%d", rows, cols) != 2) return -1;
+  return 0;
+}
+
 int getWindowSize(int *rows , int *cols){
   struct winsize ws;
 
   if (ioctl(STDOUT_FILENO, TIOCGWINSZ , &ws) == -1 || ws.ws_col == 0) {
-    return -1;
+    if (write(STDOUT_FILENO, "\x1b[999C\x1b[999B", 12) != 12) return -1;
+    return getCursorPosition(rows, cols);
   }else{
     *cols = ws.ws_col;
     *rows = ws.ws_row;
@@ -72,19 +92,33 @@ int getWindowSize(int *rows , int *cols){
   }
 }
 
+/* Append Buffer */
+
+struct abuf {
+  char *b;
+  int len;
+};
+
+#define ABUF_INIT {NULL, 0}
+
 /* output */
 void editorDrawRows(){
   int y;
   for (y = 0 ; y < E.screenrows; y++){
-    write(STDOUT_FILENO, "~\r\n", 3);
+    write(STDOUT_FILENO, "~", 1);
+    if (y < E.screenrows - 1)
+    {
+      write(STDOUT_FILENO, "\r\n", 2);
+    }
+    
   }
 }
 
 void editorRefreshScreen(){
-  write(STDOUT_FILENO, "\x1b[2J", 4);
-  write(STDOUT_FILENO, "\x1b[H", 3);
+  write(STDOUT_FILENO, "\x1b[3J\x1b[H\x1b[2J", 11);
   editorDrawRows();
   write(STDOUT_FILENO, "\x1b[H", 3);
+  fflush(stdout);
 }
 
 /* input */
