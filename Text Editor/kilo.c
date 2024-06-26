@@ -286,7 +286,7 @@ void editorMoveCursor(int key){
     }
     break;
     case ARROW_DOWN:
-    if (E.cx != E.screenrows - 1){
+    if (E.cx != E.numrows){
       E.cy++;
     }
     break;
